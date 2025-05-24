@@ -352,6 +352,10 @@ pub struct NativeOptions {
     #[cfg(any(feature = "glow", feature = "wgpu"))]
     pub window_builder: Option<WindowBuilderHook>,
 
+    // TODO: add ContextBuilderHook here
+    #[cfg(feature = "glow")]
+    pub context_builder: Option<()>,
+
     #[cfg(feature = "glow")]
     /// Needed for cross compiling for VirtualBox VMSVGA driver with OpenGL ES 2.0 and OpenGL 2.1 which doesn't support SRGB texture.
     /// See <https://github.com/emilk/egui/pull/1993>.
@@ -445,6 +449,9 @@ impl Default for NativeOptions {
 
             #[cfg(any(feature = "glow", feature = "wgpu"))]
             window_builder: None,
+
+            #[cfg(feature = "glow")]
+            context_builder: None,
 
             #[cfg(feature = "glow")]
             shader_version: None,
