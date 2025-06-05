@@ -41,6 +41,19 @@ pub type EventLoopBuilderHook = Box<dyn FnOnce(&mut EventLoopBuilder<UserEvent>)
 #[cfg(any(feature = "glow", feature = "wgpu"))]
 pub type WindowBuilderHook = Box<dyn FnOnce(egui::ViewportBuilder) -> egui::ViewportBuilder>;
 
+
+#[cfg(feature = "glow")]
+pub use glutin::context::ContextAttributesBuilder as GlContextAttributesBuilder;
+
+/// Hook into the building of a the glow/glutin `OpengGL` context.
+///
+/// You can configure any application specific details required on top of the default configuration
+/// done by `eframe`.
+#[cfg(feature = "glow")]
+pub type ContextBuilderHook = Box<
+    dyn Fn(GlContextAttributesBuilder) -> GlContextAttributesBuilder,
+>;
+
 type DynError = Box<dyn std::error::Error + Send + Sync>;
 
 /// This is how your app is created.
@@ -352,9 +365,14 @@ pub struct NativeOptions {
     #[cfg(any(feature = "glow", feature = "wgpu"))]
     pub window_builder: Option<WindowBuilderHook>,
 
-    // TODO: add ContextBuilderHook here
+    /// Hook into the building of an OpenGL context.
+    ///
+    /// Specify a callback here in case you need to make application specific changes to the
+    /// glow/glutin `OpengGL` context.
+    ///
+    /// Note: A [`NativeOptions`] clone will not include any `context_builder` hook.
     #[cfg(feature = "glow")]
-    pub context_builder: Option<()>,
+    pub context_builder: Option<ContextBuilderHook>,
 
     #[cfg(feature = "glow")]
     /// Needed for cross compiling for VirtualBox VMSVGA driver with OpenGL ES 2.0 and OpenGL 2.1 which doesn't support SRGB texture.
@@ -413,6 +431,9 @@ impl Clone for NativeOptions {
 
             #[cfg(any(feature = "glow", feature = "wgpu"))]
             window_builder: None, // Skip any builder callbacks if cloning
+
+            #[cfg(feature = "glow")]
+            context_builder: None, // Skip any builder callbacks if cloning
 
             #[cfg(feature = "wgpu")]
             wgpu_options: self.wgpu_options.clone(),

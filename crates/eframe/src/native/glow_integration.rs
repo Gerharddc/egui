@@ -999,13 +999,16 @@ impl GlutinWindowContext {
         });
         log::debug!("creating gl context using raw window handle: {glutin_raw_window_handle:?}");
 
-        // TODO: use native_options.context_builder here
+        let context_attributes = {
+            let mut context_attributes = glutin::context::ContextAttributesBuilder::new();
+            if let Some(hook) = &native_options.context_builder {
+                context_attributes = hook(context_attributes);
+            }
+            context_attributes
+        }
+        .build(glutin_raw_window_handle);
 
         // create gl context. if core context cannot be created, try gl es context as fallback.
-        let context_attributes = glutin::context::ContextAttributesBuilder::new()
-            .with_profile(glutin::context::GlProfile::Compatibility)
-            .with_debug(true)
-            .build(glutin_raw_window_handle);
         let fallback_context_attributes = glutin::context::ContextAttributesBuilder::new()
             .with_context_api(glutin::context::ContextApi::Gles(None))
             .build(glutin_raw_window_handle);
